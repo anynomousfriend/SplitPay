@@ -1,5 +1,3 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/stellar/freighter/master/docs/static/img/freighter-logo.svg" alt="Freighter Logo" width="60" height="60" />
   <h1 align="center">SplitPay</h1>
   <p align="center">
     A premium split bill calculator and payment dashboard built on the Stellar Blockchain.
