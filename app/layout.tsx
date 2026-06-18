@@ -6,6 +6,24 @@ export const metadata: Metadata = {
   title: 'SplitPay — Split Bills on Stellar',
   description: 'A premium split bill calculator built on the Stellar blockchain. Calculate splits, send XLM payments, and track transactions — all in one beautiful interface.',
   keywords: ['Stellar', 'XLM', 'split bill', 'payment', 'blockchain', 'cryptocurrency'],
+  openGraph: {
+    title: 'SplitPay — Split Bills on Stellar',
+    description: 'A premium split bill calculator built on the Stellar blockchain. Calculate splits, send XLM payments, and track transactions.',
+    images: [
+      {
+        url: '/preview.webp',
+        width: 1882,
+        height: 896,
+        alt: 'SplitPay Preview',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SplitPay — Split Bills on Stellar',
+    description: 'A premium split bill calculator built on the Stellar blockchain.',
+    images: ['/preview.webp'],
+  },
 };
 
 import SmoothScroll from '@/components/SmoothScroll';
