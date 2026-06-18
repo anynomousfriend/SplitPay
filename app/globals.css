@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   SplitPay — Light Theme Design System
+   Clean SaaS aesthetic
+   ======================================== */
+
+:root {
+  --color-primary: 15 23 42;      /* slate-900 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Keyframe Animations ---------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes float-delayed {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(15, 23, 42, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(15, 23, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 23, 42, 0); }
+}
+
+@keyframes panMap {
+  from { background-position: 0px 0px; }
+  to { background-position: -240px 0px; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes zipBar {
+  0% { width: 0%; opacity: 1; }
+  20% { width: 100%; opacity: 1; }
+  90% { width: 100%; opacity: 1; }
+  100% { width: 0%; opacity: 0; }
+}
+
+@keyframes popCheck {
+  0% { transform: scale(0); opacity: 0; }
+  18% { transform: scale(0); opacity: 0; }
+  25% { transform: scale(1.2); opacity: 1; }
+  30% { transform: scale(1); opacity: 1; }
+  90% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+@keyframes flyMoney {
+  0% { transform: translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  90% { transform: translateX(180px) scale(0.5); opacity: 0; }
+  100% { transform: translateX(180px) scale(0); opacity: 0; }
+}
+
+/* ---------- Animation Utilities ---------- */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Bento Grid Motions */
+.bento-hover {
+  transition: box-shadow 0.5s ease, border-color 0.5s ease;
+}
+.bento-hover:hover {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.02), 0 30px 60px -12px rgba(0, 0, 0, 0.08), 0 18px 36px -18px rgba(0, 0, 0, 0.05);
+  border-color: rgba(226, 232, 240, 0.8); /* slightly stronger slate-200 */
+}
+
+.bento-receipt {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .bento-receipt {
+  transform: translateY(-20px) rotate(-2deg);
+}
+
+.bento-avatar {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .bento-avatar:nth-child(1) { transform: translateX(-10px) rotate(-10deg) scale(1.1); }
+.group:hover .bento-avatar:nth-child(2) { transform: translateY(-10px) scale(1.1); z-index: 10;}
+.group:hover .bento-avatar:nth-child(3) { transform: translateX(10px) rotate(10deg) scale(1.1); }
+
+.bento-pulse {
+  transition: all 0.3s ease;
+}
+.group:hover .bento-pulse {
+  animation: pulseGlow 1.5s infinite;
+  background-color: #111827;
+  color: white;
+}
+
+.bento-map {
+  background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  animation: panMap 20s linear infinite;
+  opacity: 0.5;
+  mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+}
+
+.bento-float {
+  animation: float 4s ease-in-out infinite;
+}
+.bento-float-delayed {
+  animation: float-delayed 5s ease-in-out infinite 1s;
+}
+
+/* Skeleton Motions */
+.bento-zip {
+  animation: zipBar 3s ease-out infinite;
+}
+
+.bento-pop {
+  animation: popCheck 3s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
+}
+
+.group:hover .bento-fly {
+  animation: flyMoney 2s linear infinite;
+}
+
+@keyframes streak {
+  0% { transform: rotate(-45deg) translateX(200%); }
+  100% { transform: rotate(-45deg) translateX(-200%); }
+}
+
+.animate-streak-1 { animation: streak 2s linear infinite; }
+.animate-streak-2 { animation: streak 2s linear infinite 1s; }
+
+/* ---------- Focus Ring ---------- */
+.focus-ring {
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.4);
+}
+
+/* ---------- Custom Scrollbar ---------- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+::selection {
+  background: rgba(15, 23, 42, 0.15);
+  color: #111827;
+}
+/* Brutalist Fonts & Utilities */
+.font-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+.brutalist-border {
+  border-bottom: 1px solid #000;
+}
+
+.brutalist-border-r {
+  border-right: 1px solid #000;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+.brutalist-chip {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #333;
+}
+
+.brutalist-btn {
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.brutalist-btn:hover {
+  transform: scale(1.05);
+}
+
+.checker {
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+
+/* Grid Pattern for Redesign */
+.bg-grid-pattern {
+  background-size: 80px 80px;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+/* --- Microinteractions --- */
+@keyframes slideDownFadeIn {
+  from { opacity: 0; transform: translateY(-15px) scale(0.95); max-height: 0; margin-bottom: 0; overflow: hidden; }
+  to { opacity: 1; transform: translateY(0) scale(1); max-height: 200px; margin-bottom: 1rem; overflow: visible; }
+}
+.animate-row-add { 
+  animation: slideDownFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+}
+
+@keyframes slideOutFadeOut {
+  from { opacity: 1; transform: translateX(0); max-height: 200px; margin-bottom: 1rem; }
+  to { opacity: 0; transform: translateX(50px); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+}
+.animate-row-remove { 
+  animation: slideOutFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+  pointer-events: none; 
+}
+
+@keyframes stampIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-stamp { 
+  animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+}
+
+@keyframes flashEmerald {
+  0% { background-color: rgba(16, 185, 129, 0.15); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+  100% { background-color: transparent; box-shadow: 0 0 0 transparent; }
+}
+.animate-flash-emerald { 
+  animation: flashEmerald 1.5s ease-out forwards; 
+  border-radius: 0.5rem; 
+}
