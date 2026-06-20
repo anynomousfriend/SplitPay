@@ -29,6 +29,44 @@
 
 ---
 
+## ✦ Stellar Wallet Integration — Architecture
+
+The complete wallet integration lives across three core files:
+
+| Requirement | File | Key Function / API |
+|---|---|---|
+| **Wallet SDK Setup** | `lib/stellar-helper.ts` | `StellarWalletsKit` constructor with `allowAllModules()` and `FREIGHTER_ID` (lines 37–41) |
+| **Connect Wallet** | `components/WalletConnection.tsx` → `lib/stellar-helper.ts` | `connectWallet()` → `kit.openModal()` → `kit.setWallet()` (lines 48–71 of stellar-helper.ts) |
+| **Address Retrieval** | `lib/stellar-helper.ts` | `kit.getAddress()` returns the public key (line 59); displayed in `WalletConnection.tsx` (line 89) |
+| **Transaction Signing** | `lib/stellar-helper.ts` → `components/PaymentForm.tsx` | `kit.signTransaction(xdr)` signs via wallet extension (lines 123–125); `PaymentForm.tsx` calls `stellar.sendPayment()` (line 74) |
+| **Wallet Permissions** | `lib/stellar-helper.ts` | `allowAllModules()` registers all supported wallet modules (line 40) |
+| **Balance & History** | `lib/stellar-helper.ts` | `getBalance()` (line 73), `getRecentTransactions()` (line 142) via Horizon API |
+
+### Connection Flow
+```
+User clicks "Connect Wallet" (WalletConnection.tsx)
+  → stellar.connectWallet() (stellar-helper.ts)
+    → kit.openModal() — shows wallet picker
+    → kit.setWallet(id) — selects wallet module
+    → kit.getAddress() — retrieves public key
+  → publicKey stored in state + localStorage
+  → onConnect(key) callback propagates to page.tsx
+```
+
+### Transaction Flow
+```
+User fills PaymentForm.tsx and clicks "Send Payment"
+  → stellar.sendPayment({ from, to, amount, memo })
+    → server.loadAccount(from)
+    → TransactionBuilder builds payment operation
+    → kit.signTransaction(xdr) — wallet extension signs
+    → server.submitTransaction(signedTx)
+  → Returns { hash, success }
+  → UI displays tx hash + Stellar Expert explorer link
+```
+
+---
+
 ## ✦ Quick Start
 
 Make sure you have [Node.js](https://nodejs.org/) installed.
