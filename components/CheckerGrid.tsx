@@ -1,54 +1,62 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-
 export default function CheckerGrid() {
-  const [key, setKey] = useState(0);
-
-  const randomizeGrid = useCallback(() => {
-    // We increment a key or trigger a state change to re-render with random scales/radii
-    setKey((prev) => prev + 1);
-  }, []);
-
+  // Relaxing, soft pastel and muted palette (eliminating harsh pure hex colors)
   const checkers = [
-    'bg-[#FF2121]', 'bg-[#FF7F00]', 'bg-[#FF80ED]', 'bg-[#FFFF00]',
-    'bg-[#00FF00]', 'bg-[#007BFF]', 'bg-[#7BBFFF]', 'bg-[#7F00FF]',
-    'bg-[#440000]', 'bg-[#FF80ED]', 'bg-[#FFFF00]', 'bg-[#FF7F00]',
-    'bg-[#00FF00]', 'bg-[#007BFF]', 'bg-[#7BBFFF]', 'bg-[#FF2121]'
+    'bg-blue-200', 'bg-indigo-200', 'bg-violet-200', 'bg-fuchsia-200',
+    'bg-sky-200',  'bg-blue-300',   'bg-indigo-300', 'bg-purple-200',
+    'bg-teal-200', 'bg-cyan-200',   'bg-sky-300',    'bg-blue-200',
+    'bg-emerald-200','bg-teal-300', 'bg-cyan-300',   'bg-sky-200'
   ];
 
   return (
-    <div 
-      className="aspect-square bg-black rounded-xl overflow-hidden relative cursor-pointer"
-      onClick={randomizeGrid}
-    >
-      <div className="grid grid-cols-4 grid-rows-4 h-full w-full">
+    <div className="aspect-square bg-slate-50/50 rounded-xl overflow-hidden relative border border-slate-100">
+      <div className="grid grid-cols-4 grid-rows-4 h-full w-full gap-1 p-2">
         {checkers.map((colorClass, i) => {
-          // On click, we randomize styles using inline styles since it's dynamic
-          const isRandomized = key > 0;
-          const scale = isRandomized ? 0.5 + Math.random() : 1;
-          const borderRadius = isRandomized && Math.random() > 0.5 ? '50%' : '0%';
+          // Create a diagonal wave delay pattern
+          const x = i % 4;
+          const y = Math.floor(i / 4);
+          const delay = (x + y) * 0.5;
           
           return (
             <div
-              key={`${i}-${key}`}
-              className={`checker ${colorClass}`}
+              key={i}
+              className={`w-full h-full ${colorClass} relaxing-cell`}
               style={{
-                transform: `scale(${scale})`,
-                borderRadius: borderRadius,
-                // Automatically reset after 600ms to mimic the setTimeout logic
-                animation: isRandomized ? `checkerReset 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards` : 'none'
+                animationDelay: `${delay}s`
               }}
             />
           );
         })}
       </div>
       <style jsx>{`
-        @keyframes checkerReset {
-          0% { }
-          100% {
+        .relaxing-cell {
+          border-radius: 8px;
+          opacity: 0.7;
+          /* Smooth, slow infinite animation */
+          animation: breathe 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes breathe {
+          0% {
             transform: scale(1);
-            border-radius: 0%;
+            border-radius: 8px;
+            opacity: 0.7;
+          }
+          33% {
+            transform: scale(0.85);
+            border-radius: 50%;
+            opacity: 1;
+          }
+          66% {
+            transform: scale(0.92);
+            border-radius: 16px;
+            opacity: 0.85;
+          }
+          100% {
+            transform: scale(0.75);
+            border-radius: 40%;
+            opacity: 0.9;
           }
         }
       `}</style>
