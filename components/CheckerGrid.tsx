@@ -1,12 +1,12 @@
 'use client';
 
 export default function CheckerGrid() {
-  // Relaxing, soft pastel and muted palette (eliminating harsh pure hex colors)
+  // Soft pastel versions of the original rainbow/vibrant palette
   const checkers = [
-    'bg-blue-200', 'bg-indigo-200', 'bg-violet-200', 'bg-fuchsia-200',
-    'bg-sky-200',  'bg-blue-300',   'bg-indigo-300', 'bg-purple-200',
-    'bg-teal-200', 'bg-cyan-200',   'bg-sky-300',    'bg-blue-200',
-    'bg-emerald-200','bg-teal-300', 'bg-cyan-300',   'bg-sky-200'
+    'bg-red-300',   'bg-orange-300', 'bg-pink-300',   'bg-yellow-200',
+    'bg-green-300', 'bg-blue-400',   'bg-sky-300',    'bg-purple-300',
+    'bg-rose-400',  'bg-pink-300',   'bg-yellow-200', 'bg-orange-300',
+    'bg-green-300', 'bg-blue-400',   'bg-sky-300',    'bg-red-300'
   ];
 
   return (
