@@ -5,7 +5,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { stellar } from '@/lib/stellar-helper';
 import { FaTrashAlt, FaPlus, FaCheckCircle, FaSpinner, FaLock } from 'react-icons/fa';
 import { Card, Input, Button, Alert, Modal, Badge } from './example-components';
 import gsap from 'gsap';
@@ -49,11 +48,12 @@ interface Person {
 interface SplitBillCalculatorProps {
   publicKey: string;
   onPaymentSuccess?: () => void;
+  sendPayment: (params: { from: string; to: string; amount: string; memo?: string }) => Promise<{ hash: string; success: boolean }>;
 }
 
 const TIP_OPTIONS = [0, 10, 15, 20];
 
-export default function SplitBillCalculator({ publicKey, onPaymentSuccess }: SplitBillCalculatorProps) {
+export default function SplitBillCalculator({ publicKey, onPaymentSuccess, sendPayment }: SplitBillCalculatorProps) {
   const [billAmount, setBillAmount] = useState('');
   const [tipPercent, setTipPercent] = useState(15);
   const [people, setPeople] = useState<Person[]>([
@@ -114,7 +114,7 @@ export default function SplitBillCalculator({ publicKey, onPaymentSuccess }: Spl
       setPeople((prev) => prev.map((p) => p.id === person.id ? { ...p, status: 'sending', isNew: false } : p));
       
       try {
-        const result = await stellar.sendPayment({
+        const result = await sendPayment({
           from: publicKey,
           to: person.address.trim(),
           amount: perPersonFormatted,

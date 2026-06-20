@@ -4,13 +4,21 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { FaHome, FaFileInvoiceDollar, FaChartLine, FaCog, FaQuestionCircle, FaBell, FaBolt, FaWallet, FaLock, FaCalculator, FaGlobe, FaChartPie, FaArrowRight, FaCheck } from 'react-icons/fa';
 
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+
+import * as StellarSdk from '@stellar/stellar-sdk';
+import {
+  StellarWalletsKit,
+  WalletNetwork,
+  allowAllModules,
+  FREIGHTER_ID
+} from '@creit.tech/stellar-wallets-kit';
 
 const WalletConnection = dynamic(() => import('@/components/WalletConnection'), { ssr: false });
 const BalanceDisplay = dynamic(() => import('@/components/BalanceDisplay'), { ssr: false });
@@ -23,7 +31,199 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+// ============================================
+// Stellar Wallet Hook — All blockchain logic
+// ============================================
+function useStellarWallet(network: 'testnet' | 'mainnet' = 'testnet') {
+  const serverRef = useRef<StellarSdk.Horizon.Server | null>(null);
+  const kitRef = useRef<StellarWalletsKit | null>(null);
+
+  const networkPassphrase = network === 'testnet'
+    ? StellarSdk.Networks.TESTNET
+    : StellarSdk.Networks.PUBLIC;
+
+  const walletNetwork = network === 'testnet'
+    ? WalletNetwork.TESTNET
+    : WalletNetwork.PUBLIC;
+
+  // Lazily initialize server and kit (persisted across renders via ref)
+  if (!serverRef.current) {
+    serverRef.current = new StellarSdk.Horizon.Server(
+      network === 'testnet'
+        ? 'https://horizon-testnet.stellar.org'
+        : 'https://horizon.stellar.org'
+    );
+  }
+  if (!kitRef.current && typeof window !== 'undefined') {
+    kitRef.current = new StellarWalletsKit({
+      network: walletNetwork,
+      selectedWalletId: FREIGHTER_ID,
+      modules: allowAllModules(),
+    });
+  }
+
+  // These helpers assert non-null since all callers run client-side only (ssr: false)
+  const getServer = () => {
+    if (!serverRef.current) throw new Error('Stellar server not initialized');
+    return serverRef.current;
+  };
+  const getKit = () => {
+    if (!kitRef.current) throw new Error('Wallet kit not initialized — are you on the client?');
+    return kitRef.current;
+  };
+
+  const connectWallet = useCallback(async (): Promise<string> => {
+    try {
+      await getKit().openModal({
+        onWalletSelected: async (option: { id: string }) => {
+          console.log('Wallet selected:', option.id);
+          getKit().setWallet(option.id);
+        }
+      });
+
+      const { address } = await getKit().getAddress();
+
+      if (!address) {
+        throw new Error('Wallet could not connect');
+      }
+
+      return address;
+    } catch (error: any) {
+      console.error('Wallet connection error:', error);
+      throw new Error('Wallet connection failed: ' + error.message);
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    // No-op on kit side; state is managed by the page component
+  }, []);
+
+  const getBalance = useCallback(async (publicKey: string): Promise<{
+    xlm: string;
+    assets: Array<{ code: string; issuer: string; balance: string }>;
+  }> => {
+    const account = await getServer().loadAccount(publicKey);
+
+    const xlmBalance = account.balances.find(
+      (b) => b.asset_type === 'native'
+    );
+
+    const assets = account.balances
+      .filter((b) => b.asset_type !== 'native')
+      .map((b: any) => ({
+        code: b.asset_code,
+        issuer: b.asset_issuer,
+        balance: b.balance,
+      }));
+
+    return {
+      xlm: xlmBalance && 'balance' in xlmBalance ? xlmBalance.balance : '0',
+      assets,
+    };
+  }, []);
+
+  const sendPayment = useCallback(async (params: {
+    from: string;
+    to: string;
+    amount: string;
+    memo?: string;
+  }): Promise<{ hash: string; success: boolean }> => {
+    const account = await getServer().loadAccount(params.from);
+
+    const transactionBuilder = new StellarSdk.TransactionBuilder(account, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase,
+    }).addOperation(
+      StellarSdk.Operation.payment({
+        destination: params.to,
+        asset: StellarSdk.Asset.native(),
+        amount: params.amount,
+      })
+    );
+
+    if (params.memo) {
+      transactionBuilder.addMemo(StellarSdk.Memo.text(params.memo));
+    }
+
+    const transaction = transactionBuilder.setTimeout(180).build();
+
+    const { signedTxXdr } = await getKit().signTransaction(transaction.toXDR(), {
+      networkPassphrase,
+    });
+
+    const transactionToSubmit = StellarSdk.TransactionBuilder.fromXDR(
+      signedTxXdr,
+      networkPassphrase
+    );
+
+    const result = await getServer().submitTransaction(
+      transactionToSubmit as StellarSdk.Transaction
+    );
+
+    return {
+      hash: result.hash,
+      success: result.successful,
+    };
+  }, [networkPassphrase]);
+
+  const getRecentTransactions = useCallback(async (
+    publicKey: string,
+    limit: number = 10
+  ): Promise<Array<{
+    id: string;
+    type: string;
+    amount?: string;
+    asset?: string;
+    from?: string;
+    to?: string;
+    createdAt: string;
+    hash: string;
+  }>> => {
+    const payments = await getServer()
+      .payments()
+      .forAccount(publicKey)
+      .order('desc')
+      .limit(limit)
+      .call();
+
+    return payments.records.map((payment: any) => ({
+      id: payment.id,
+      type: payment.type,
+      amount: payment.amount,
+      asset: payment.asset_type === 'native' ? 'XLM' : payment.asset_code,
+      from: payment.from,
+      to: payment.to,
+      createdAt: payment.created_at,
+      hash: payment.transaction_hash,
+    }));
+  }, []);
+
+  const formatAddress = useCallback((address: string, startChars: number = 4, endChars: number = 4): string => {
+    if (address.length <= startChars + endChars) {
+      return address;
+    }
+    return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
+  }, []);
+
+  const getExplorerLink = useCallback((hash: string, type: 'tx' | 'account' = 'tx'): string => {
+    const net = networkPassphrase === StellarSdk.Networks.TESTNET ? 'testnet' : 'public';
+    return `https://stellar.expert/explorer/${net}/${type}/${hash}`;
+  }, [networkPassphrase]);
+
+  return {
+    connectWallet,
+    disconnect,
+    getBalance,
+    sendPayment,
+    getRecentTransactions,
+    formatAddress,
+    getExplorerLink,
+  };
+}
+
 export default function Home() {
+  const stellar = useStellarWallet('testnet');
+
   const [isConnected, setIsConnected] = useState(false);
   const [publicKey, setPublicKey] = useState('');
   const [feeAmount, setFeeAmount] = useState(9.99);
@@ -146,7 +346,7 @@ export default function Home() {
             <Logo className="w-6 h-6" />
             <span className="font-bold text-xl tracking-tighter">SplitPay</span>
           </div>
-          <WalletConnection onConnect={handleConnect} onDisconnect={handleDisconnect} />
+          <WalletConnection onConnect={handleConnect} onDisconnect={handleDisconnect} connectWallet={stellar.connectWallet} disconnect={stellar.disconnect} formatAddress={stellar.formatAddress} getExplorerLink={stellar.getExplorerLink} />
         </header>
 
         {/* Pinned Hero Container */}
@@ -442,7 +642,7 @@ export default function Home() {
               <FaBell />
             </button>
             <div className="w-px h-6 bg-slate-200" />
-            <WalletConnection onConnect={handleConnect} onDisconnect={handleDisconnect} />
+            <WalletConnection onConnect={handleConnect} onDisconnect={handleDisconnect} connectWallet={stellar.connectWallet} disconnect={stellar.disconnect} formatAddress={stellar.formatAddress} getExplorerLink={stellar.getExplorerLink} />
           </div>
         </header>
 
@@ -459,19 +659,19 @@ export default function Home() {
             <div className="grid lg:grid-cols-12 gap-8">
               {/* Left Column (Form) */}
               <div className="lg:col-span-8">
-                <SplitBillCalculator publicKey={publicKey} onPaymentSuccess={handlePaymentSuccess} />
+                <SplitBillCalculator publicKey={publicKey} onPaymentSuccess={handlePaymentSuccess} sendPayment={stellar.sendPayment} />
               </div>
 
               {/* Right Column (Preview/Context) */}
               <div className="lg:col-span-4 space-y-6">
                 {/* Balance Block */}
                 <div key={`balance-${refreshKey}`}>
-                  <BalanceDisplay publicKey={publicKey} />
+                  <BalanceDisplay publicKey={publicKey} getBalance={stellar.getBalance} formatAddress={stellar.formatAddress} />
                 </div>
 
                 {/* History Block */}
                 <div key={`history-${refreshKey}`}>
-                  <TransactionHistory publicKey={publicKey} />
+                  <TransactionHistory publicKey={publicKey} getRecentTransactions={stellar.getRecentTransactions} formatAddress={stellar.formatAddress} getExplorerLink={stellar.getExplorerLink} />
                 </div>
               </div>
             </div>

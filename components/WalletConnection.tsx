@@ -5,16 +5,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { stellar } from '@/lib/stellar-helper';
 import { FaWallet, FaCopy, FaCheck, FaSignOutAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { Card, Badge, LoadingSpinner, Button } from './example-components';
 
 interface WalletConnectionProps {
   onConnect: (publicKey: string) => void;
   onDisconnect: () => void;
+  connectWallet: () => Promise<string>;
+  disconnect: () => void;
+  formatAddress: (address: string, start?: number, end?: number) => string;
+  getExplorerLink: (hash: string, type?: 'tx' | 'account') => string;
 }
 
-export default function WalletConnection({ onConnect, onDisconnect }: WalletConnectionProps) {
+export default function WalletConnection({ onConnect, onDisconnect, connectWallet, disconnect, formatAddress, getExplorerLink }: WalletConnectionProps) {
   const [publicKey, setPublicKey] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +35,7 @@ export default function WalletConnection({ onConnect, onDisconnect }: WalletConn
   const handleConnect = async () => {
     try {
       setLoading(true);
-      const key = await stellar.connectWallet();
+      const key = await connectWallet();
       setPublicKey(key);
       setIsConnected(true);
       localStorage.setItem('stellar_publicKey', key);
@@ -46,7 +49,7 @@ export default function WalletConnection({ onConnect, onDisconnect }: WalletConn
   };
 
   const handleDisconnect = () => {
-    stellar.disconnect();
+    disconnect();
     setPublicKey('');
     setIsConnected(false);
     localStorage.removeItem('stellar_publicKey');
@@ -86,7 +89,7 @@ export default function WalletConnection({ onConnect, onDisconnect }: WalletConn
         <div className="flex flex-col">
           <span className="text-xs font-bold text-slate-900 leading-none mb-1 hidden sm:block">Connected</span>
           <span className="text-[10px] font-mono text-slate-500 leading-none">
-            {stellar.formatAddress(publicKey, 4, 4)}
+            {formatAddress(publicKey, 4, 4)}
           </span>
         </div>
       </div>
@@ -102,7 +105,7 @@ export default function WalletConnection({ onConnect, onDisconnect }: WalletConn
           {copied ? <FaCheck className="text-emerald-500 text-xs" /> : <FaCopy className="text-xs" />}
         </button>
         <a
-          href={stellar.getExplorerLink(publicKey, 'account')}
+          href={getExplorerLink(publicKey, 'account')}
           target="_blank"
           rel="noopener noreferrer"
           className="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"

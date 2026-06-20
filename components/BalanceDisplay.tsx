@@ -5,15 +5,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { stellar } from '@/lib/stellar-helper';
 import { FaSync } from 'react-icons/fa';
 import { Card, Skeleton, IconButton } from './example-components';
 
 interface BalanceDisplayProps {
   publicKey: string;
+  getBalance: (publicKey: string) => Promise<{ xlm: string; assets: Array<{ code: string; issuer: string; balance: string }> }>;
+  formatAddress: (address: string, start?: number, end?: number) => string;
 }
 
-export default function BalanceDisplay({ publicKey }: BalanceDisplayProps) {
+export default function BalanceDisplay({ publicKey, getBalance, formatAddress }: BalanceDisplayProps) {
   const [balance, setBalance] = useState<string>('0');
   const [assets, setAssets] = useState<Array<{ code: string; issuer: string; balance: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ export default function BalanceDisplay({ publicKey }: BalanceDisplayProps) {
   const fetchBalance = async () => {
     try {
       setRefreshing(true);
-      const balanceData = await stellar.getBalance(publicKey);
+      const balanceData = await getBalance(publicKey);
       setBalance(balanceData.xlm);
       setAssets(balanceData.assets);
     } catch (error) {
@@ -90,7 +91,7 @@ export default function BalanceDisplay({ publicKey }: BalanceDisplayProps) {
             >
               <div>
                 <p className="text-slate-800 font-bold text-sm">{asset.code}</p>
-                <p className="text-slate-400 text-xs font-mono">{stellar.formatAddress(asset.issuer, 4, 4)}</p>
+                <p className="text-slate-400 text-xs font-mono">{formatAddress(asset.issuer, 4, 4)}</p>
               </div>
               <p className="text-slate-900 font-bold text-sm">{formatBalance(asset.balance)}</p>
             </div>

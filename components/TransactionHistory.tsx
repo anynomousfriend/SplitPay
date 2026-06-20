@@ -5,7 +5,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { stellar } from '@/lib/stellar-helper';
 import { FaSync, FaArrowUp, FaArrowDown, FaExternalLinkAlt } from 'react-icons/fa';
 import { Card, EmptyState, IconButton, Skeleton } from './example-components';
 
@@ -22,9 +21,12 @@ interface Transaction {
 
 interface TransactionHistoryProps {
   publicKey: string;
+  getRecentTransactions: (publicKey: string, limit?: number) => Promise<Transaction[]>;
+  formatAddress: (address: string, start?: number, end?: number) => string;
+  getExplorerLink: (hash: string, type?: 'tx' | 'account') => string;
 }
 
-export default function TransactionHistory({ publicKey }: TransactionHistoryProps) {
+export default function TransactionHistory({ publicKey, getRecentTransactions, formatAddress, getExplorerLink }: TransactionHistoryProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,7 +34,7 @@ export default function TransactionHistory({ publicKey }: TransactionHistoryProp
   const fetchTransactions = async () => {
     try {
       setRefreshing(true);
-      const txs = await stellar.getRecentTransactions(publicKey, 8);
+      const txs = await getRecentTransactions(publicKey, 8);
       setTransactions(txs);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -117,7 +119,7 @@ export default function TransactionHistory({ publicKey }: TransactionHistoryProp
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 mt-0.5">
                       <span className="whitespace-nowrap">{formatDate(tx.createdAt)}</span>
                       <span className="hidden sm:inline">•</span>
-                      <span className="font-mono truncate">{stellar.formatAddress((outgoing ? tx.to : tx.from) || '', 4, 4)}</span>
+                      <span className="font-mono truncate">{formatAddress((outgoing ? tx.to : tx.from) || '', 4, 4)}</span>
                     </div>
                   </div>
                 </div>
@@ -135,7 +137,7 @@ export default function TransactionHistory({ publicKey }: TransactionHistoryProp
                   )}
                   <div className="w-5 flex justify-end">
                     <a
-                      href={stellar.getExplorerLink(tx.hash, 'tx')}
+                      href={getExplorerLink(tx.hash, 'tx')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-900 transition-all"

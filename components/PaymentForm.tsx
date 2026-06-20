@@ -15,16 +15,17 @@
 'use client';
 
 import { useState } from 'react';
-import { stellar } from '@/lib/stellar-helper';
 import { FaPaperPlane, FaCheckCircle } from 'react-icons/fa';
 import { Card, Input, Button, Alert } from './example-components';
 
 interface PaymentFormProps {
   publicKey: string;
   onSuccess?: () => void;
+  sendPayment: (params: { from: string; to: string; amount: string; memo?: string }) => Promise<{ hash: string; success: boolean }>;
+  getExplorerLink: (hash: string, type?: 'tx' | 'account') => string;
 }
 
-export default function PaymentForm({ publicKey, onSuccess }: PaymentFormProps) {
+export default function PaymentForm({ publicKey, onSuccess, sendPayment, getExplorerLink }: PaymentFormProps) {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
@@ -71,7 +72,7 @@ export default function PaymentForm({ publicKey, onSuccess }: PaymentFormProps) 
       setAlert(null);
       setTxHash('');
 
-      const result = await stellar.sendPayment({
+      const result = await sendPayment({
         from: publicKey,
         to: recipient,
         amount: amount,
@@ -143,7 +144,7 @@ export default function PaymentForm({ publicKey, onSuccess }: PaymentFormProps) 
               <p className="text-white/70 text-sm mb-2">Transaction Hash:</p>
               <p className="text-white/90 text-xs font-mono break-all mb-3">{txHash}</p>
               <a
-                href={stellar.getExplorerLink(txHash, 'tx')}
+                href={getExplorerLink(txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 text-sm underline"
