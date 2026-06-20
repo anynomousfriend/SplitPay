@@ -74,20 +74,25 @@ function useStellarWallet(network: 'testnet' | 'mainnet' = 'testnet') {
 
   const connectWallet = useCallback(async (): Promise<string> => {
     try {
-      await getKit().openModal({
-        onWalletSelected: async (option: { id: string }) => {
-          console.log('Wallet selected:', option.id);
-          getKit().setWallet(option.id);
-        }
+      return await new Promise<string>((resolve, reject) => {
+        getKit().openModal({
+          onWalletSelected: async (option: { id: string }) => {
+            try {
+              console.log('Wallet selected:', option.id);
+              getKit().setWallet(option.id);
+              
+              const { address } = await getKit().getAddress();
+              if (!address) {
+                reject(new Error('Wallet could not connect'));
+                return;
+              }
+              resolve(address);
+            } catch (err) {
+              reject(err);
+            }
+          }
+        }).catch(reject);
       });
-
-      const { address } = await getKit().getAddress();
-
-      if (!address) {
-        throw new Error('Wallet could not connect');
-      }
-
-      return address;
     } catch (error: any) {
       console.error('Wallet connection error:', error);
       throw new Error('Wallet connection failed: ' + error.message);
