@@ -13,17 +13,20 @@ export default function CheckerGrid() {
     <div className="aspect-square bg-slate-50/50 rounded-xl overflow-hidden relative border border-slate-100">
       <div className="grid grid-cols-4 grid-rows-4 h-full w-full gap-1 p-2">
         {checkers.map((colorClass, i) => {
-          // Create a diagonal wave delay pattern
-          const x = i % 4;
-          const y = Math.floor(i / 4);
-          const delay = (x + y) * 0.5;
+          // Pre-calculated scattered delays (0 to 8s) for organic, uncoordinated breathing
+          const delays = [
+            2.4, 0.5, 5.1, 1.8,
+            4.2, 6.7, 3.3, 0.9,
+            7.5, 1.2, 4.8, 6.1,
+            0.3, 3.9, 5.6, 2.7
+          ];
           
           return (
             <div
               key={i}
               className={`w-full h-full ${colorClass} relaxing-cell`}
               style={{
-                animationDelay: `${delay}s`
+                animationDelay: `-${delays[i]}s` // Negative delay so they start already out of sync
               }}
             />
           );
